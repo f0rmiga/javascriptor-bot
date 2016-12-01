@@ -21,7 +21,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
       let sandbox = {
         print: function (data) {
           results.push({
-            type: 'document',
+            type: 'article',
             id: uuid.v1(),
             title: 'Result',
             input_message_content: {
