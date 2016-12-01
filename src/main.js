@@ -20,7 +20,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
       let script = new vm.Script(code)
       let sandbox = {
         print: function (data) {
-          results.push({
+          results[0] = {
             type: 'article',
             id: uuid.v1(),
             title: code,
@@ -28,7 +28,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
               message_text: `${code}\n\nResult:\n${data}`,
               disable_web_page_preview: true
             }
-          })
+          }
         }
       }
       script.runInNewContext(sandbox)
@@ -41,7 +41,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
       body: {
         inline_query_id: req.body.inline_query.id,
         results: JSON.stringify(results),
-				cache_time: 0
+        cache_time: 0
       }
     }, (error, response, body) => {
       if (!error && response.statusCode == 200) {
