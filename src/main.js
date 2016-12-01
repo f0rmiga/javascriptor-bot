@@ -27,7 +27,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
         }
       }
       script.runInNewContext(sandbox)
-    } catch () {}
+    } catch (e) {}
 
     request({
       url: `https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerInlineQuery`,
