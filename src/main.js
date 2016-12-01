@@ -11,20 +11,24 @@ app.use(bodyParser.json())
 app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
   if (req.body.inline_query) {
     let code = req.body.inline_query.query
-    console.log(code)
-
     let results = []
 
     let script = new vm.Script(code)
     let sandbox = {
       print: function (data) {
-        // results.push({
-        //   message_text: data,
-        //   disable_web_page_preview: true
-        // })
+        results.push({
+          input_message_content: {
+            message_text: data,
+            disable_web_page_preview: true
+          }
+        })
       }
     }
-    script.runInNewContext(sandbox)
+    try {
+      script.runInNewContext(sandbox)
+    } catch (e) {
+      results = []
+    }
 
     request({
       url: `https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerInlineQuery`,
