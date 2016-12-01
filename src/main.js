@@ -25,7 +25,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
             id: uuid.v1(),
             title: 'Result',
             input_message_content: {
-              message_text: data,
+              message_text: `${data}`,
               disable_web_page_preview: true
             }
           })
@@ -33,8 +33,6 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
       }
       script.runInNewContext(sandbox)
     } catch (e) {}
-
-    console.log(results)
 
     request({
       url: `https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerInlineQuery`,
