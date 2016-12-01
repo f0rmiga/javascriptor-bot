@@ -40,7 +40,8 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
       json: true,
       body: {
         inline_query_id: req.body.inline_query.id,
-        results: JSON.stringify(results)
+        results: JSON.stringify(results),
+				cache_time: 0
       }
     }, (error, response, body) => {
       if (!error && response.statusCode == 200) {
