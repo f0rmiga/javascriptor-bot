@@ -2,13 +2,7 @@ const vm = require('vm')
 
 const request = require('request')
 
-const redis = require('redis')
-const redisClient = redis.createClient({
-  url: process.env.REDIS_URL
-})
-redisClient.on('error', function (err) {
-  console.log(`Redis error: ${err}`)
-})
+const cache = new (require('node-cache'))()
 
 const express = require('express')
 const app = express()
@@ -27,75 +21,69 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
     let prints = []
 
     // Check if a context exists for the user making the request
-    let userId = req.body.inline_query.from.id.toString()
-    redisClient.get(userId, (err, redisData) => {
-      if (err) {
-        res.end()
-        console.log(err)
-        return
-      }
+    let userId = req.body.inline_query.from.id
+    const cacheContext = cache.get(userId)
 
-      const sandbox = {
-        print: function (data) {
-          prints.push(data)
-        },
-        println: function (data) {
-          prints.push(data)
-          prints.push('\n')
-        }
+    const sandbox = {
+      print: function (data) {
+        prints.push(data)
+      },
+      println: function (data) {
+        prints.push(data)
+        prints.push('\n')
       }
+    }
 
-      var context
-      if (!redisData) {
-        // No previous context, create a new one
-        context = new vm.createContext(sandbox)
-        if (process.env.MODE == 'debug') console.log(`New context: ${Object.keys(context)}`)
+    var context
+    if (!cacheContext) {
+      // No previous context, create a new one
+      context = new vm.createContext(sandbox)
+      if (process.env.MODE == 'debug') console.log(`New context: ${Object.keys(context)}`)
+    } else {
+      // Load previous context
+      context = cacheContext
+      if (process.env.MODE == 'debug') console.log(`Existing context: ${Object.keys(context)}`)
+    }
+
+    var scriptError = false
+    try {
+      // Create a script to be executed
+      let script = new vm.Script(code)
+      // Execute the script in the context
+      script.runInContext(context)
+
+      // Store the context
+      cache.set(userId, context, parseInt(process.env.CONTEXT_TTL))
+    } catch (e) {
+      scriptError = true
+    }
+
+    // Results is used to send the request to answerInlineQuery
+    let results = [{
+      type: 'article',
+      id: uuid.v1(),
+      title: code,
+      input_message_content: {
+        message_text: `${code}\n\nResult:\n${prints.join('')}`,
+        disable_web_page_preview: true
+      }
+    }]
+
+    request({
+      url: `https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerInlineQuery`,
+      method: 'POST',
+      json: true,
+      body: {
+        inline_query_id: req.body.inline_query.id,
+        results: !scriptError ? JSON.stringify(results) : '[]',
+        cache_time: 0
+      }
+    }, (error, response, body) => {
+      if (!error && response.statusCode == 200) {
+        console.log(body)
       } else {
-        // Load previous context
-        context = JSON.parse(redisData)
-        if (process.env.MODE == 'debug') console.log(`Existing context: ${Object.keys(context)}`)
+        console.log(error, response.statusCode)
       }
-
-      var scriptError = false
-      try {
-        // Create a script to be executed
-        let script = new vm.Script(code)
-        // Execute the script in the context
-        script.runInContext(context)
-
-        // Store the context
-        redisClient.set(userId, JSON.stringify(context), 'EX', process.env.CONTEXT_TTL)
-      } catch (e) {
-        scriptError = true
-      }
-
-      // Results is used to send the request to answerInlineQuery
-      let results = [{
-        type: 'article',
-        id: uuid.v1(),
-        title: code,
-        input_message_content: {
-          message_text: `${code}\n\nResult:\n${prints.join('')}`,
-          disable_web_page_preview: true
-        }
-      }]
-
-      request({
-        url: `https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerInlineQuery`,
-        method: 'POST',
-        json: true,
-        body: {
-          inline_query_id: req.body.inline_query.id,
-          results: !scriptError ? JSON.stringify(results) : '[]',
-          cache_time: 0
-        }
-      }, (error, response, body) => {
-        if (!error && response.statusCode == 200) {
-          console.log(body)
-        } else {
-          console.log(error, response.statusCode)
-        }
-      })
     })
   }
 
