@@ -27,7 +27,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
     let prints = []
 
     // Check if a context exists for the user making the request
-    let userId = req.body.inline_query.from.id
+    let userId = req.body.inline_query.from.id.toString()
     redisClient.get(userId, (err, redisData) => {
       if (err) {
         res.end()
