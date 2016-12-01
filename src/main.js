@@ -34,6 +34,8 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
       script.runInNewContext(sandbox)
     } catch (e) {}
 
+    console.log(results)
+
     request({
       url: `https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerInlineQuery`,
       method: 'POST',
@@ -45,6 +47,8 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
     }, (error, response, body) => {
       if (!error && response.statusCode == 200) {
         console.log(body)
+      } else {
+        console.log(error, response.statusCode)
       }
     })
   } else {
