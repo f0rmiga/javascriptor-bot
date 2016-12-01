@@ -25,7 +25,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
             id: uuid.v1(),
             title: code,
             input_message_content: {
-              message_text: `Script:\n${code}\n\nResult:\n${data}`,
+              message_text: `${code}\n\nResult:\n${data}`,
               disable_web_page_preview: true
             }
           })
