@@ -2,6 +2,14 @@ const vm = require('vm')
 
 const request = require('request')
 
+const redis = require('redis')
+const redisClient = redis.createClient({
+  url: process.env.REDIS_URL
+})
+redisClient.on('error', function (err) {
+  console.log(`Redis error: ${err}`)
+})
+
 const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
@@ -11,11 +19,17 @@ const uuid = require('node-uuid')
 app.use(bodyParser.json())
 
 app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
+  console.log(req.body)
   if (req.body.inline_query) {
+    // Get the code from the query
     let code = req.body.inline_query.query
 
+    // Prints used in code
     let prints = []
+    // Results is used to send the request to answerInlineQuery
     let results = []
+
+    // Check if a context exists for the user making the request
 
     try {
       let script = new vm.Script(code)
@@ -59,8 +73,6 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
         console.log(error, response.statusCode)
       }
     })
-  } else {
-
   }
 
   res.end()
