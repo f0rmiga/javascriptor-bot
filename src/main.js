@@ -56,6 +56,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
         if (process.env.MODE == 'debug') console.log(`Existing context: ${context}`)
       }
 
+      var scriptError = false
       try {
         // Create a script to be executed
         let script = new vm.Script(code)
@@ -65,7 +66,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
         // Store the context
         redisClient.set(userId, JSON.stringify(context), 'EX', process.env.CONTEXT_TTL)
       } catch (e) {
-        prints = []
+        scriptError = true
       }
 
       // Results is used to send the request to answerInlineQuery
@@ -85,7 +86,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
         json: true,
         body: {
           inline_query_id: req.body.inline_query.id,
-          results: prints.length > 0 ? JSON.stringify(results) : '[]',
+          results: !scriptError ? JSON.stringify(results) : '[]',
           cache_time: 0
         }
       }, (error, response, body) => {
