@@ -16,12 +16,13 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
     let script = new vm.Script(code)
     let sandbox = {
       print: function (data) {
-        results.push({
-          input_message_content: {
-            message_text: data,
-            disable_web_page_preview: true
-          }
-        })
+        console.log(data)
+        // results.push({
+        //   input_message_content: {
+        //     message_text: data,
+        //     disable_web_page_preview: true
+        //   }
+        // })
       }
     }
     try {
