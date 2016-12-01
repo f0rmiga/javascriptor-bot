@@ -44,7 +44,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
       cacheContext.print = sandbox.print
       cacheContext.println = sandbox.println
       context = new vm.createContext(cacheContext)
-      cache.ttl(userId, parseInt(process.env.CONTEXT_TTL))
+      cache.set(userId, context, parseInt(process.env.CONTEXT_TTL))
       if (process.env.MODE == 'debug') console.log(`Existing context: ${Object.keys(context)}`)
     }
 
