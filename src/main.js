@@ -7,7 +7,7 @@ const bodyParser = require('body-parser')
 
 app.use(bodyParser.json())
 
-app.post('/eval', (req, res) => {
+app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
   console.log(req.body)
 
   let script = new vm.Script('print(20 + 30)')
@@ -25,4 +25,5 @@ app.post('/eval', (req, res) => {
 if (!process.env.PORT) process.env.PORT = 3000
 app.listen(process.env.PORT, () => {
   console.log(`Listening on port ${process.env.PORT}`)
+  console.log(`The access path to bot is ${process.env.SECRET_PATH}`)
 })
