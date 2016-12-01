@@ -49,11 +49,11 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
       if (!redisData) {
         // No previous context, create a new one
         context = new vm.createContext(sandbox)
-        if (process.env.MODE == 'debug') console.log(`New context: ${context}`)
+        if (process.env.MODE == 'debug') console.log(`New context: ${Object.keys(context)}`)
       } else {
         // Load previous context
         context = JSON.parse(redisData)
-        if (process.env.MODE == 'debug') console.log(`Existing context: ${context}`)
+        if (process.env.MODE == 'debug') console.log(`Existing context: ${Object.keys(context)}`)
       }
 
       var scriptError = false
