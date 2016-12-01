@@ -18,16 +18,6 @@ const uuid = require('node-uuid')
 
 app.use(bodyParser.json())
 
-const sandbox = {
-  print: function (data) {
-    prints.push(data)
-  },
-  println: function (data) {
-    prints.push(data)
-    prints.push('\n')
-  }
-}
-
 app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
   if (req.body.inline_query) {
     // Get the code from the query
@@ -43,6 +33,16 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
         res.end()
         console.log(err)
         return
+      }
+
+      const sandbox = {
+        print: function (data) {
+          prints.push(data)
+        },
+        println: function (data) {
+          prints.push(data)
+          prints.push('\n')
+        }
       }
 
       var context
