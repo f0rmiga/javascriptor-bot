@@ -14,25 +14,34 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
   if (req.body.inline_query) {
     let code = req.body.inline_query.query
 
+    let prints = []
     let results = []
 
     try {
       let script = new vm.Script(code)
       let sandbox = {
         print: function (data) {
-          results[0] = {
-            type: 'article',
-            id: uuid.v1(),
-            title: code,
-            input_message_content: {
-              message_text: `${code}\n\nResult:\n${data}`,
-              disable_web_page_preview: true
-            }
-          }
+          prints.push(data)
+        },
+        println: function (data) {
+          prints.push(data)
+          prints.push('\n')
         }
       }
       script.runInNewContext(sandbox)
-    } catch (e) {}
+
+      results[0] = {
+        type: 'article',
+        id: uuid.v1(),
+        title: code,
+        input_message_content: {
+          message_text: `${code}\n\nResult:\n${prints.join('')}`,
+          disable_web_page_preview: true
+        }
+      }
+    } catch (e) {
+      prints = []
+    }
 
     request({
       url: `https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerInlineQuery`,
@@ -40,7 +49,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
       json: true,
       body: {
         inline_query_id: req.body.inline_query.id,
-        results: JSON.stringify(results),
+        results: prints.length > 0 ? JSON.stringify(results) : '[]',
         cache_time: 0
       }
     }, (error, response, body) => {
