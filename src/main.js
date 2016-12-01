@@ -42,6 +42,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
     } else {
       // Load previous context
       context = cacheContext
+      cache.ttl(userId, parseInt(process.env.CONTEXT_TTL))
       if (process.env.MODE == 'debug') console.log(`Existing context: ${Object.keys(context)}`)
     }
 
