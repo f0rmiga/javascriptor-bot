@@ -6,6 +6,8 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 
+const uuid = require('node-uuid')
+
 app.use(bodyParser.json())
 
 app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
@@ -19,6 +21,9 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
       let sandbox = {
         print: function (data) {
           results.push({
+            type: 'document',
+            id: uuid.v1(),
+            title: 'Result',
             input_message_content: {
               message_text: data,
               disable_web_page_preview: true
