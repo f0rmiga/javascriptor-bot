@@ -23,7 +23,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
           results.push({
             type: 'article',
             id: uuid.v1(),
-            title: 'Result',
+            title: code,
             input_message_content: {
               message_text: `${data}`,
               disable_web_page_preview: true
