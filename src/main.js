@@ -10,16 +10,21 @@ app.use(bodyParser.json())
 
 app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
   if (req.body.inline_query) {
-    // let code = req.body.message.text
-		//
-    // let script = new vm.Script(code)
-		//
-    // let sandbox = {
-    //   print: function (data) {
-    //     res.write(data)
-    //   }
-    // }
-    // script.runInNewContext(sandbox)
+    let code = req.body.inline_query.query
+    console.log(code)
+
+    let results = []
+
+    let script = new vm.Script(code)
+    let sandbox = {
+      print: function (data) {
+        results.push({
+          message_text: data,
+          disable_web_page_preview: true
+        })
+      }
+    }
+    script.runInNewContext(sandbox)
 
     request({
       url: `https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerInlineQuery`,
@@ -27,9 +32,9 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
       json: true,
       body: {
         inline_query_id: req.body.inline_query.id,
-        results: '[]'
+        results: JSON.stringify(results)
       }
-    }, function (error, response, body) {
+    }, (error, response, body) => {
       if (!error && response.statusCode == 200) {
         console.log(body)
       }
