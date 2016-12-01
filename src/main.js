@@ -53,7 +53,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
       } else {
         // Load previous context
         context = JSON.parse(redisData)
-        if (process.env.MODE == 'debug') console.log(`New context: ${context}`)
+        if (process.env.MODE == 'debug') console.log(`Existing context: ${context}`)
       }
 
       try {
