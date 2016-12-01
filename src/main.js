@@ -59,6 +59,9 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
         let script = new vm.Script(code)
         // Execute the script in the context
         script.runInContext(context)
+
+        // Store the context
+        redisClient.set(userId, JSON.stringify(context), 'EX', process.env.CONTEXT_TTL)
       } catch (e) {
         prints = []
       }
