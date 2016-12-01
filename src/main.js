@@ -18,33 +18,53 @@ const uuid = require('node-uuid')
 
 app.use(bodyParser.json())
 
+const sandbox = {
+  print: function (data) {
+    prints.push(data)
+  },
+  println: function (data) {
+    prints.push(data)
+    prints.push('\n')
+  }
+}
+
 app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
-  console.log(req.body)
   if (req.body.inline_query) {
     // Get the code from the query
     let code = req.body.inline_query.query
 
     // Prints used in code
     let prints = []
-    // Results is used to send the request to answerInlineQuery
-    let results = []
 
     // Check if a context exists for the user making the request
-
-    try {
-      let script = new vm.Script(code)
-      let sandbox = {
-        print: function (data) {
-          prints.push(data)
-        },
-        println: function (data) {
-          prints.push(data)
-          prints.push('\n')
-        }
+    let userId = req.body.inline_query.from.id
+    redisClient.get(userId, (err, redisData) => {
+      if (err) {
+        res.end()
+        console.log(err)
+        return
       }
-      script.runInNewContext(sandbox)
 
-      results[0] = {
+      var context
+      if (!redisData) {
+        // No previous context, create a new one
+        context = new vm.createContext(sandbox)
+      } else {
+        // Load previous context
+        context = JSON.parse(redisData)
+      }
+
+      try {
+        // Create a script to be executed
+        let script = new vm.Script(code)
+        // Execute the script in the context
+        script.runInContext(context)
+      } catch (e) {
+        prints = []
+      }
+
+      // Results is used to send the request to answerInlineQuery
+      let results = [{
         type: 'article',
         id: uuid.v1(),
         title: code,
@@ -52,26 +72,24 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
           message_text: `${code}\n\nResult:\n${prints.join('')}`,
           disable_web_page_preview: true
         }
-      }
-    } catch (e) {
-      prints = []
-    }
+      }]
 
-    request({
-      url: `https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerInlineQuery`,
-      method: 'POST',
-      json: true,
-      body: {
-        inline_query_id: req.body.inline_query.id,
-        results: prints.length > 0 ? JSON.stringify(results) : '[]',
-        cache_time: 0
-      }
-    }, (error, response, body) => {
-      if (!error && response.statusCode == 200) {
-        console.log(body)
-      } else {
-        console.log(error, response.statusCode)
-      }
+      request({
+        url: `https://api.telegram.org/bot${process.env.BOT_TOKEN}/answerInlineQuery`,
+        method: 'POST',
+        json: true,
+        body: {
+          inline_query_id: req.body.inline_query.id,
+          results: prints.length > 0 ? JSON.stringify(results) : '[]',
+          cache_time: 0
+        }
+      }, (error, response, body) => {
+        if (!error && response.statusCode == 200) {
+          console.log(body)
+        } else {
+          console.log(error, response.statusCode)
+        }
+      })
     })
   }
 
