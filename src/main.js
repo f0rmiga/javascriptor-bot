@@ -38,14 +38,14 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
     if (!cacheContext) {
       // No previous context, create a new one
       context = new vm.createContext(sandbox)
-      if (process.env.MODE == 'debug') console.log(`New context: ${Object.keys(context)}`)
+      if (process.env.MODE === 'debug') console.log(`New context: ${Object.keys(context)}`)
     } else {
       // Load previous context
       cacheContext.print = sandbox.print
       cacheContext.println = sandbox.println
       context = new vm.createContext(cacheContext)
       cache.set(userId, context, parseInt(process.env.CONTEXT_TTL))
-      if (process.env.MODE == 'debug') console.log(`Existing context: ${Object.keys(context)}`)
+      if (process.env.MODE === 'debug') console.log(`Existing context: ${Object.keys(context)}`)
     }
 
     var scriptError = false
@@ -82,7 +82,7 @@ app.post(`/${process.env.SECRET_PATH}`, (req, res) => {
         cache_time: 0
       }
     }, (error, response, body) => {
-      if (!error && response.statusCode == 200) {
+      if (!error && response.statusCode === 200) {
         console.log(body)
       } else {
         console.log(error, response.statusCode)
